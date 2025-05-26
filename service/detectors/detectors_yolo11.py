@@ -13,7 +13,7 @@ class YOLOv11Detector:
                 f"Please place the file 'final_model_yolo11.onnx' in the 'service/models/' directory."
             )
         # Charger le modèle avec Ultralytics YOLO
-        self.model = YOLO(model_path)
+        self.model = YOLO(model_path, task="detect")
         # Vérifier les classes du modèle
         self.classes = self.model.names
         print(f"Classes du modèle : {self.classes}")
