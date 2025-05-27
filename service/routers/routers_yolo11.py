@@ -11,6 +11,7 @@ import cv2
 
 router = APIRouter(prefix="/yolo", tags=["YOLOv11"])
 
+
 @router.post("/predict", response_model=DetectionResponse)
 async def predict(file: UploadFile = File(...)):
     # Valider le type de fichier
