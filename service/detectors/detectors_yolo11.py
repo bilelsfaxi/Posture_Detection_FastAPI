@@ -5,7 +5,7 @@ import numpy as np
 from typing import List, Dict
 
 class YOLOv11Detector:
-    def __init__(self, model_path: str = "final_model_yolo11.onnx"):
+    def __init__(self, model_path: str = "final_model_yolo11.pt"):
         model_path = os.path.join(os.path.dirname(__file__), "..", "models", model_path)
         if not os.path.exists(model_path):
             raise RuntimeError(
