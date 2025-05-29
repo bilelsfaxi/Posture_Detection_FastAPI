@@ -1,22 +1,28 @@
 from ultralytics import YOLO
 import os
+import gdown
+import tempfile
 import cv2
 import numpy as np
 from typing import List, Dict
 
 class YOLOv11Detector:
-    def __init__(self, model_path: str = "final_model_yolo11.pt"):
-        model_path = os.path.join(os.path.dirname(__file__), "..", "models", model_path)
-        if not os.path.exists(model_path):
-            raise RuntimeError(
-                f"Model file not found at {model_path}. "
-                f"Please place the file 'final_model_yolo11.onnx' in the 'service/models/' directory."
-            )
-        # Charger le modèle avec Ultralytics YOLO
-        self.model = YOLO(model_path, task="detect")
-        # Vérifier les classes du modèle
-        self.classes = self.model.names
-        print(f"Classes du modèle : {self.classes}")
+    def __init__(self, model_url: str = "https://drive.google.com/uc?id=17uxGv6mOcy8kYgwutfQFm-HTaJNmDltd"):
+        temp_dir = tempfile.gettempdir()
+        self.model_path = os.path.join(temp_dir, "final_model_yolo11.pt")  # Ajustez l'extension si .onnx
+        if not os.path.exists(self.model_path):
+            print(f"Downloading model from {model_url} to {self.model_path}...")
+            try:
+                gdown.download(model_url, self.model_path, quiet=False)
+                print(f"Model downloaded successfully.")
+            except Exception as e:
+                raise RuntimeError(f"Failed to download model from Google Drive: {str(e)}")
+        try:
+            self.model = YOLO(self.model_path, task="detect")
+            self.classes= self.model.names
+            print(f"Model loaded successfully at {self.model_path}")
+        except Exception as e:
+            raise RuntimeError(f"Failed to load model: {str(e)}")
 
     def process_image(self, image_np: np.ndarray, output_path: str = None) -> List[Dict]:
         # Prétraitement et prédiction avec Ultralytics YOLO
