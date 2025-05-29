@@ -1,7 +1,7 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException
 from fastapi.responses import Response
-from service.schemas.schemas_yolo11 import DetectionResponse
-from service.detectors.detectors_yolo11 import YOLOv11Detector
+from api.schemas.schemas_yolo11 import DetectionResponse
+from api.detectors.detectors_yolo11 import YOLOv11Detector
 import os
 import tempfile
 import numpy as np

@@ -1,1 +1,8 @@
-__API_DEPLOYMENT__
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+API_DEPLOYMENT/
+.env
+*.log
