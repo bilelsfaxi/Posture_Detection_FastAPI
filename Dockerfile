@@ -12,7 +12,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip \
  && pip install --no-cache-dir -r requirements.txt
 
-# Étape 5 : Installer ensuite les dépendances légères
+RUN apt-get update && apt-get install -y libgl1
+
 
 
 # Étape 6 : Copier le reste du projet
