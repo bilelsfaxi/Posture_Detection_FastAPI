@@ -5,15 +5,15 @@ FROM python:3.13-slim
 WORKDIR /app
 
 # Étape 3 : Copier les fichiers de dépendances
-COPY requirements-heavy.txt .
-COPY requirements-light.txt .
+COPY requirements.txt .
+
 
 # Étape 4 : Installer d'abord les dépendances lourdes (caching efficace)
 RUN pip install --no-cache-dir --upgrade pip \
- && pip install --no-cache-dir -r requirements-heavy.txt
+ && pip install --no-cache-dir -r requirements.txt
 
 # Étape 5 : Installer ensuite les dépendances légères
-RUN pip install --no-cache-dir -r requirements-light.txt
+
 
 # Étape 6 : Copier le reste du projet
 COPY api/ api/
