@@ -7,44 +7,64 @@ import tempfile
 import numpy as np
 from io import BytesIO
 from PIL import Image
-import cv2
 
 router = APIRouter(prefix="/yolo", tags=["YOLOv11"])
 
 
 @router.post("/predict", response_model=DetectionResponse)
 async def predict(file: UploadFile = File(...)):
-    # Valider le type de fichier
     if not file.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
 
     try:
-        # Initialiser le détecteur
         detector = YOLOv11Detector()
-        
-        # Lire l'image en mémoire
+
         contents = await file.read()
         image = Image.open(BytesIO(contents)).convert("RGB")
         image_np = np.array(image)
 
-        # Utiliser un fichier temporaire pour la sortie
         with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_output:
             temp_output_path = temp_output.name
-            # Traiter l'image
             detections = detector.process_image(image_np, temp_output_path)
 
-        # Vérifier si l'image annotée a été créée
         if not os.path.exists(temp_output_path):
-            raise HTTPException(status_code=500, detail="Failed to generate annotated image")
+            raise HTTPException(status_code=500, detail="Échec de la génération de l'image annotée")
 
-        # Lire l'image annotée et la renvoyer
         with open(temp_output_path, "rb") as annotated_file:
             encoded_image = annotated_file.read()
 
-        # Nettoyer le fichier temporaire
         os.remove(temp_output_path)
 
         return Response(content=encoded_image, media_type="image/jpeg")
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur lors du traitement de l'image : {str(e)}")
+
+
+@router.post("/predict-video")
+async def predict_video(file: UploadFile = File(...)):
+    if not file.content_type.startswith("video/"):
+        raise HTTPException(status_code=400, detail="File must be a video")
+
+    try:
+        detector = YOLOv11Detector()
+
+        contents = await file.read()
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_input:
+            temp_input.write(contents)
+            temp_input_path = temp_input.name
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_output:
+            temp_output_path = temp_output.name
+            detector.process_video(temp_input_path, temp_output_path)
+
+        with open(temp_output_path, "rb") as output_file:
+            encoded_video = output_file.read()
+
+        os.remove(temp_input_path)
+        os.remove(temp_output_path)
+
+        return Response(content=encoded_video, media_type="video/mp4")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors du traitement de la vidéo : {str(e)}")
