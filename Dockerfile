@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y libgl1
 
 # Étape 6 : Copier le reste du projet
 COPY api/ api/
-
+    
 # Étape 7 : Définir un port d'exécution par défaut
 ENV PORT=8000
 
