@@ -1,7 +1,6 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException
 from fastapi.responses import Response
 from api.schemas.schemas_yolo11 import DetectionResponse
-from api.detectors.detectors_yolo11 import YOLOv11Detector
 import os
 import tempfile
 import numpy as np
@@ -10,6 +9,8 @@ from PIL import Image
 
 router = APIRouter(prefix="/yolo", tags=["YOLOv11"])
 
+# Ce champ sera injecté par main.py
+detector = None
 
 @router.post("/predict", response_model=DetectionResponse)
 async def predict(file: UploadFile = File(...)):
@@ -17,7 +18,8 @@ async def predict(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="File must be an image")
 
     try:
-        detector = YOLOv11Detector()
+        if detector is None:
+            raise RuntimeError("Le modèle YOLOv11 n'a pas été initialisé")
 
         contents = await file.read()
         image = Image.open(BytesIO(contents)).convert("RGB")
@@ -47,7 +49,8 @@ async def predict_video(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="File must be a video")
 
     try:
-        detector = YOLOv11Detector()
+        if detector is None:
+            raise RuntimeError("Le modèle YOLOv11 n'a pas été initialisé")
 
         contents = await file.read()
         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_input:
