@@ -18,13 +18,6 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Étape 6 : Copier le code source de l’API
 COPY api/ api/
 
-# ✅ Étape 6bis : Copier le fichier modèle YOLOv11
-COPY C:/Users/GIGABYTE/Deployment_API_APP/api/models/final_model_yolo11.pt C:/Users/GIGABYTE/Deployment_API_APP/api/models/final_model_yolo11.pt
-
-# (Optionnel) Définir le répertoire de config d’Ultralytics
-ENV YOLO_CONFIG_DIR=/app/.config/Ultralytics
-RUN mkdir -p /app/.config/Ultralytics
-
 # Étape 7 : Spécifier la variable d’environnement du port obligatoire (7860)
 ENV PORT=7860
 
