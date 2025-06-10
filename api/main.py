@@ -1,5 +1,6 @@
 # main.py
 from fastapi import FastAPI
+import os
 import logging
 from api.detectors import detectors_yolo11
 from api.routers import routers_yolo11
@@ -10,7 +11,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="YOLOv11 Dog Posture Detection API")
 
 # Modèle local
-MODEL_PATH = "C:/Users/GIGABYTE/Deployment_API_APP/api/models/final_model_yolo11.pt"
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "models", "final_model_yolo11.pt")
 detector = detectors_yolo11.YOLOv11Detector(model_path=MODEL_PATH)
 
 # Injection dans le routeur

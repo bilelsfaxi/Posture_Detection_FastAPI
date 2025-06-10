@@ -5,7 +5,7 @@ import numpy as np
 from typing import List, Dict
 
 class YOLOv11Detector:
-    def __init__(self, model_path: str = "C:/Users/GIGABYTE/Deployment_API_APP/api/models/final_model_yolo11.pt"):
+    def __init__(self, model_path: str = os.path.join(os.path.dirname(__file__), "..", "models", "final_model_yolo11.pt")):
         if not os.path.exists(model_path):
             raise FileNotFoundError(
                 f"Le modèle YOLOv11 n’a pas été trouvé à l’emplacement : {model_path}\n"
@@ -18,6 +18,7 @@ class YOLOv11Detector:
             print(f"✅ Modèle chargé avec succès depuis {model_path}")
         except Exception as e:
             raise RuntimeError(f"❌ Échec du chargement du modèle : {str(e)}")
+
 
     def process_image(self, image_np: np.ndarray, output_path: str = None) -> List[Dict]:
         results = self.model(image_np, conf=0.5)
