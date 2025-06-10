@@ -1,29 +1,23 @@
 from ultralytics import YOLO
 import os
-import gdown
-import tempfile
 import cv2
 import numpy as np
 from typing import List, Dict
 
 class YOLOv11Detector:
-    def __init__(self, model_url: str = "https://drive.google.com/uc?id=17uxGv6mOcy8kYgwutfQFm-HTaJNmDltd"):
-        temp_dir = tempfile.gettempdir()
-        self.model_path = os.path.join(temp_dir, "final_model_yolo11.pt")
-        if not os.path.exists(self.model_path):
-            print(f"Téléchargement du modèle depuis {model_url} vers {self.model_path}...")
-            try:
-                gdown.download(model_url, self.model_path, quiet=False)
-                print(f"Modèle téléchargé avec succès.")
-            except Exception as e:
-                raise RuntimeError(f"Échec du téléchargement du modèle : {str(e)}")
+    def __init__(self, model_path: str = "api/models/final_model_yolo11.pt"):
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(
+                f"Le modèle YOLOv11 n’a pas été trouvé à l’emplacement : {model_path}\n"
+                f"Veuillez vous assurer que le fichier .pt est présent dans le dossier du projet."
+            )
 
         try:
-            self.model = YOLO(self.model_path, task="detect")
+            self.model = YOLO(model_path, task="detect")
             self.classes = self.model.names
-            print(f"Modèle chargé avec succès à {self.model_path}")
+            print(f"✅ Modèle chargé avec succès depuis {model_path}")
         except Exception as e:
-            raise RuntimeError(f"Échec du chargement du modèle : {str(e)}")
+            raise RuntimeError(f"❌ Échec du chargement du modèle : {str(e)}")
 
     def process_image(self, image_np: np.ndarray, output_path: str = None) -> List[Dict]:
         results = self.model(image_np, conf=0.5)
@@ -31,8 +25,7 @@ class YOLOv11Detector:
         annotated_image = image_np.copy()
 
         for r in results:
-            boxes = r.boxes
-            for box in boxes:
+            for box in r.boxes:
                 try:
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
                     confidence = float(box.conf[0])
@@ -78,7 +71,6 @@ class YOLOv11Detector:
 
             detections = self.process_image(frame)
             all_detections.extend(detections)
-
             out.write(frame)
 
         cap.release()
