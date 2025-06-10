@@ -1,0 +1,24 @@
+# Caches
+__pycache__/
+*.py[cod]
+*.so
+
+# Environnement Python
+.env
+.venv/
+.Python
+
+# Logs
+*.log
+
+# Modèles lourds
+*.pt
+
+
+# Dossier à ignorer (si temporaire ou sensible)
+API_DEPLOYMENT/
+
+# OS / IDE spécifiques
+.DS_Store
+.vscode/
+.idea/
