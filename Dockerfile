@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY api/ api/
 
 # ✅ Étape 6bis : Copier le fichier modèle YOLOv11
-COPY api/models/final_model_yolo11.pt api/models/final_model_yolo11.pt
+COPY C:/Users/GIGABYTE/Deployment_API_APP/api/models/final_model_yolo11.pt C:/Users/GIGABYTE/Deployment_API_APP/api/models/final_model_yolo11.pt
 
 # (Optionnel) Définir le répertoire de config d’Ultralytics
 ENV YOLO_CONFIG_DIR=/app/.config/Ultralytics
