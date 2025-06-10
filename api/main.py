@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(title="YOLOv11 Dog Posture Detection API")
 
 # Modèle local
-MODEL_PATH = "api/models/final_model_yolo11.pt"
+MODEL_PATH = "C:/Users/GIGABYTE/Deployment_API_APP/api/models/final_model_yolo11.pt"
 detector = detectors_yolo11.YOLOv11Detector(model_path=MODEL_PATH)
 
 # Injection dans le routeur
