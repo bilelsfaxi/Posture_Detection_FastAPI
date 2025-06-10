@@ -11,9 +11,6 @@ __pycache__/
 # Logs
 *.log
 
-# Modèles lourds
-*.pt
-
 
 # Dossier à ignorer (si temporaire ou sensible)
 API_DEPLOYMENT/
