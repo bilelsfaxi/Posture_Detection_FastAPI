@@ -1,5 +1,5 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException
-from fastapi.responses import Response
+from fastapi.responses import Response, StreamingResponse
 from api.schemas.schemas_yolo11 import DetectionResponse
 import os
 import tempfile
@@ -27,7 +27,7 @@ async def predict(file: UploadFile = File(...)):
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as temp_output:
             temp_output_path = temp_output.name
-            detections = detector.process_image(image_np, temp_output_path)
+            detections, _ = detector.process_image(image_np, temp_output_path)
 
         if not os.path.exists(temp_output_path):
             raise HTTPException(status_code=500, detail="Échec de la génération de l'image annotée")
@@ -61,13 +61,9 @@ async def predict_video(file: UploadFile = File(...)):
             temp_output_path = temp_output.name
             detector.process_video(temp_input_path, temp_output_path)
 
-        with open(temp_output_path, "rb") as output_file:
-            encoded_video = output_file.read()
+        video_stream = open(temp_output_path, "rb")
 
-        os.remove(temp_input_path)
-        os.remove(temp_output_path)
-
-        return Response(content=encoded_video, media_type="video/mp4")
+        return StreamingResponse(video_stream, media_type="video/mp4")
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors du traitement de la vidéo : {str(e)}")

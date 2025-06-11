@@ -2,7 +2,7 @@ from ultralytics import YOLO
 import os
 import cv2
 import numpy as np
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 class YOLOv11Detector:
     def __init__(self, model_path: str = os.path.join(os.path.dirname(__file__), "..", "models", "final_model_yolo11.pt")):
@@ -19,8 +19,7 @@ class YOLOv11Detector:
         except Exception as e:
             raise RuntimeError(f"❌ Échec du chargement du modèle : {str(e)}")
 
-
-    def process_image(self, image_np: np.ndarray, output_path: str = None) -> List[Dict]:
+    def process_image(self, image_np: np.ndarray, output_path: str = None) -> Tuple[List[Dict], np.ndarray]:
         results = self.model(image_np, conf=0.5)
         detections = []
         annotated_image = image_np.copy()
@@ -50,7 +49,7 @@ class YOLOv11Detector:
         if output_path:
             cv2.imwrite(output_path, annotated_image)
 
-        return detections
+        return detections, annotated_image
 
     def process_video(self, video_path: str, output_path: str) -> List[Dict]:
         cap = cv2.VideoCapture(video_path)
@@ -70,9 +69,9 @@ class YOLOv11Detector:
             if not ret:
                 break
 
-            detections = self.process_image(frame)
+            detections, annotated_frame = self.process_image(frame)
             all_detections.extend(detections)
-            out.write(frame)
+            out.write(annotated_frame)
 
         cap.release()
         out.release()
