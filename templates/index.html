@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YOLOv11 Dog Posture Detection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        header {
+            background-color: #343a40;
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        form {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        input[type="file"] {
+            margin-bottom: 0.5rem;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #videoFeed {
+            max-width: 100%;
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 600px) {
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>YOLOv11 Dog Posture Detection</h1>
+    </header>
+
+    <div class="container">
+        <section class="upload-form">
+            <form action="/yolo/predict" method="post" enctype="multipart/form-data">
+                <h2>Upload an Image</h2>
+                <input type="file" name="file" accept="image/*" required>
+                <button type="submit">Upload Image</button>
+            </form>
+
+            <form action="/yolo/predict-video" method="post" enctype="multipart/form-data">
+                <h2>Upload a Video</h2>
+                <input type="file" name="file" accept="video/*" required>
+                <button type="submit">Upload Video</button>
+            </form>
+        </section>
+
+        <section>
+            <h2>Live Detection Stream</h2>
+            <img id="videoFeed" src="" alt="Live stream from camera (WebSocket)">
+        </section>
+    </div>
+
+    <script>
+        const ws = new WebSocket(`ws://${window.location.host}/yolo/ws`);
+        const videoFeed = document.getElementById('videoFeed');
+
+        ws.onmessage = function(event) {
+            const blob = new Blob([event.data], { type: 'image/jpeg' });
+            const url = URL.createObjectURL(blob);
+            videoFeed.src = url;
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+        };
+
+        ws.onclose = function() {
+            console.log("WebSocket connection closed");
+        };
+    </script>
+</body>
+</html>
