@@ -72,6 +72,10 @@
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
 
+        .stream-controls {
+            margin: 1rem 0;
+        }
+
         @media (max-width: 600px) {
             button {
                 width: 100%;
@@ -101,24 +105,78 @@
 
         <section>
             <h2>Live Detection Stream</h2>
+            <div class="stream-controls">
+                <button id="startStreamBtn">Activer le Live Stream</button>
+                <button id="stopStreamBtn">Désactiver le Live Stream</button>
+            </div>
             <img id="videoFeed" src="" alt="Live stream from camera (WebSocket)">
         </section>
     </div>
 
     <script>
-        const ws = new WebSocket(`ws://${window.location.host}/yolo/ws`);
+        let ws = null; // Initialisation différée du WebSocket
         const videoFeed = document.getElementById('videoFeed');
+        const startStreamBtn = document.getElementById('startStreamBtn');
+        const stopStreamBtn = document.getElementById('stopStreamBtn');
 
-        ws.onmessage = function(event) {
-            const blob = new Blob([event.data], { type: 'image/jpeg' });
-            const url = URL.createObjectURL(blob);
-            videoFeed.src = url;
-            setTimeout(() => URL.revokeObjectURL(url), 100);
-        };
+        function initializeWebSocket() {
+            if (!ws || ws.readyState === WebSocket.CLOSED) {
+                ws = new WebSocket(`ws://${window.location.host}/yolo/ws`);
+                ws.onmessage = function(event) {
+                    if (event.data instanceof Blob) {
+                        const blob = event.data;
+                        const url = URL.createObjectURL(blob);
+                        videoFeed.src = url;
+                        setTimeout(() => URL.revokeObjectURL(url), 100);
+                    } else if (typeof event.data === 'string') {
+                        console.log("Serveur : " + event.data); // Afficher les messages texte
+                    }
+                };
 
-        ws.onclose = function() {
-            console.log("WebSocket connection closed");
-        };
+                ws.onclose = function() {
+                    console.log("WebSocket connection closed");
+                    ws = null; // Réinitialiser pour une nouvelle connexion
+                };
+
+                ws.onerror = function(error) {
+                    console.error("WebSocket error: ", error);
+                };
+            }
+        }
+
+        startStreamBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/yolo/start-stream', { method: 'POST' });
+                const data = await response.json();
+                if (data.message) {
+                    alert(data.message);
+                    if (data.message === "Streaming activé" && !ws) {
+                        initializeWebSocket();
+                    }
+                } else {
+                    alert("Erreur : Réponse inattendue du serveur");
+                }
+            } catch (error) {
+                alert("Erreur lors de l'activation du stream : " + error.message);
+            }
+        });
+
+        stopStreamBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/yolo/stop-stream', { method: 'POST' });
+                const data = await response.json();
+                if (data.message) {
+                    alert(data.message);
+                    if (data.message === "Streaming arrêté" && ws) {
+                        ws.close(); // Fermer la connexion WebSocket
+                    }
+                } else {
+                    alert("Erreur : Réponse inattendue du serveur");
+                }
+            } catch (error) {
+                alert("Erreur lors de la désactivation du stream : " + error.message);
+            }
+        });
     </script>
 </body>
 </html>

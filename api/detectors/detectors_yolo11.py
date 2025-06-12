@@ -2,7 +2,7 @@ from ultralytics import YOLO
 import os
 import cv2
 import numpy as np
-from typing import List, Dict, Tuple
+from typing import List, Dict
 
 class YOLOv11Detector:
     def __init__(self, model_path: str = os.path.join(os.path.dirname(__file__), "..", "models", "final_model_yolo11.pt")):
@@ -19,7 +19,7 @@ class YOLOv11Detector:
         except Exception as e:
             raise RuntimeError(f"❌ Échec du chargement du modèle : {str(e)}")
 
-    def process_image(self, image_np: np.ndarray, output_path: str = None) -> Tuple[List[Dict], np.ndarray]:
+    def process_image(self, image_np: np.ndarray, output_path: str = None) -> List[Dict]:
         results = self.model(image_np, conf=0.5)
         detections = []
         annotated_image = image_np.copy()
@@ -49,7 +49,7 @@ class YOLOv11Detector:
         if output_path:
             cv2.imwrite(output_path, annotated_image)
 
-        return detections, annotated_image
+        return detections
 
     def process_video(self, video_path: str, output_path: str) -> List[Dict]:
         cap = cv2.VideoCapture(video_path)
@@ -60,19 +60,32 @@ class YOLOv11Detector:
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fps = cap.get(cv2.CAP_PROP_FPS)
 
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        # Utiliser un codec compatible avec les navigateurs (H.264)
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Alternative : 'H264' ou 'X264'
         out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
         all_detections = []
 
+        frame_count = 0
         while True:
             ret, frame = cap.read()
             if not ret:
+                print(f"Fin de la vidéo après {frame_count} frames")
                 break
 
-            detections, annotated_frame = self.process_image(frame)
+            detections = self.process_image(frame)
             all_detections.extend(detections)
+            annotated_frame = frame.copy()
+            for det in detections:
+                x1, y1, x2, y2 = map(int, det["bbox"])
+                cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                label = f"{det['class_name']} {det['confidence']:.2f}"
+                text_y = max(y1 - 10, 20)
+                cv2.putText(annotated_frame, label, (x1, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
             out.write(annotated_frame)
+            frame_count += 1
+            print(f"Frame {frame_count} annotée et écrite")
 
         cap.release()
         out.release()
+        print(f"Vidéo annotée sauvegardée à {output_path}")
         return all_detections
