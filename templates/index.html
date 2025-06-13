@@ -76,6 +76,25 @@
             margin: 1rem 0;
         }
 
+        #videoDownloadSection {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        #videoDownloadLink {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #28a745;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        #videoDownloadLink:hover {
+            background-color: #218838;
+        }
+
         @media (max-width: 600px) {
             button {
                 width: 100%;
@@ -90,17 +109,21 @@
 
     <div class="container">
         <section class="upload-form">
-            <form action="/yolo/predict" method="post" enctype="multipart/form-data">
+            <form id="imageForm" action="/yolo/predict" method="post" enctype="multipart/form-data">
                 <h2>Upload an Image</h2>
                 <input type="file" name="file" accept="image/*" required>
                 <button type="submit">Upload Image</button>
             </form>
 
-            <form action="/yolo/predict-video" method="post" enctype="multipart/form-data">
+            <form id="videoForm">
                 <h2>Upload a Video</h2>
                 <input type="file" name="file" accept="video/*" required>
                 <button type="submit">Upload Video</button>
             </form>
+
+            <div id="videoDownloadSection">
+                <a id="videoDownloadLink" href="#" download="video_annotated.mp4">📥 Télécharger la vidéo annotée</a>
+            </div>
         </section>
 
         <section>
@@ -114,7 +137,7 @@
     </div>
 
     <script>
-        let ws = null; // Initialisation différée du WebSocket
+        let ws = null;
         const videoFeed = document.getElementById('videoFeed');
         const startStreamBtn = document.getElementById('startStreamBtn');
         const stopStreamBtn = document.getElementById('stopStreamBtn');
@@ -129,13 +152,13 @@
                         videoFeed.src = url;
                         setTimeout(() => URL.revokeObjectURL(url), 100);
                     } else if (typeof event.data === 'string') {
-                        console.log("Serveur : " + event.data); // Afficher les messages texte
+                        console.log("Serveur : " + event.data);
                     }
                 };
 
                 ws.onclose = function() {
                     console.log("WebSocket connection closed");
-                    ws = null; // Réinitialiser pour une nouvelle connexion
+                    ws = null;
                 };
 
                 ws.onerror = function(error) {
@@ -168,13 +191,41 @@
                 if (data.message) {
                     alert(data.message);
                     if (data.message === "Streaming arrêté" && ws) {
-                        ws.close(); // Fermer la connexion WebSocket
+                        ws.close();
                     }
                 } else {
                     alert("Erreur : Réponse inattendue du serveur");
                 }
             } catch (error) {
                 alert("Erreur lors de la désactivation du stream : " + error.message);
+            }
+        });
+
+        // Formulaire vidéo
+        const videoForm = document.getElementById('videoForm');
+        const videoDownloadSection = document.getElementById('videoDownloadSection');
+        const videoDownloadLink = document.getElementById('videoDownloadLink');
+
+        videoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(videoForm);
+
+            try {
+                const response = await fetch('/yolo/predict-video', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Échec du traitement de la vidéo.');
+                }
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                videoDownloadLink.href = url;
+                videoDownloadSection.style.display = 'block';
+            } catch (error) {
+                alert("Erreur lors de l’envoi de la vidéo : " + error.message);
             }
         });
     </script>

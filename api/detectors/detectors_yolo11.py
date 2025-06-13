@@ -11,15 +11,17 @@ class YOLOv11Detector:
                 f"Le modèle YOLOv11 n’a pas été trouvé à l’emplacement : {model_path}\n"
                 f"Veuillez vous assurer que le fichier .pt est présent dans le dossier du projet."
             )
-
         try:
-            self.model = YOLO(model_path, task="detect")
+            self.model = YOLO(model_path)
             self.classes = self.model.names
             print(f"✅ Modèle chargé avec succès depuis {model_path}")
         except Exception as e:
             raise RuntimeError(f"❌ Échec du chargement du modèle : {str(e)}")
 
     def process_image(self, image_np: np.ndarray, output_path: str = None) -> List[Dict]:
+        """
+        Traite une image numpy, retourne les détections et peut enregistrer une version annotée.
+        """
         results = self.model(image_np, conf=0.5)
         detections = []
         annotated_image = image_np.copy()
@@ -38,6 +40,7 @@ class YOLOv11Detector:
                         "bbox": [float(x1), float(y1), float(x2), float(y2)]
                     })
 
+                    # Dessiner les annotations
                     cv2.rectangle(annotated_image, (x1, y1), (x2, y2), (0, 255, 0), 2)
                     label = f"{class_name} {confidence:.2f}"
                     text_y = max(y1 - 10, 20)
@@ -52,40 +55,43 @@ class YOLOv11Detector:
         return detections
 
     def process_video(self, video_path: str, output_path: str) -> List[Dict]:
+        """
+        Traite une vidéo frame par frame et sauvegarde une vidéo annotée.
+        """
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
-            raise ValueError("Impossible d'ouvrir la vidéo")
+            raise ValueError(f"Impossible d'ouvrir la vidéo : {video_path}")
 
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         fps = cap.get(cv2.CAP_PROP_FPS)
 
-        # Utiliser un codec compatible avec les navigateurs (H.264)
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Alternative : 'H264' ou 'X264'
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
-        all_detections = []
 
+        all_detections = []
         frame_count = 0
+
         while True:
             ret, frame = cap.read()
             if not ret:
-                print(f"Fin de la vidéo après {frame_count} frames")
                 break
 
             detections = self.process_image(frame)
             all_detections.extend(detections)
-            annotated_frame = frame.copy()
+
+            # Annoter frame à nouveau pour la vidéo
             for det in detections:
                 x1, y1, x2, y2 = map(int, det["bbox"])
-                cv2.rectangle(annotated_frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
                 label = f"{det['class_name']} {det['confidence']:.2f}"
                 text_y = max(y1 - 10, 20)
-                cv2.putText(annotated_frame, label, (x1, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
-            out.write(annotated_frame)
+                cv2.putText(frame, label, (x1, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+
+            out.write(frame)
             frame_count += 1
-            print(f"Frame {frame_count} annotée et écrite")
 
         cap.release()
         out.release()
-        print(f"Vidéo annotée sauvegardée à {output_path}")
+        print(f"✅ Vidéo annotée enregistrée dans : {output_path} ({frame_count} frames)")
         return all_detections
