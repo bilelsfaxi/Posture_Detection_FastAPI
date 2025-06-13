@@ -8,6 +8,11 @@ __pycache__/
 .venv/
 .Python
 
+temp_results/
+*.mp4
+*.avi
+*.mov
+
 # Logs
 *.log
 
